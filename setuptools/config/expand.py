@@ -224,8 +224,8 @@ def _find_module(
     considering the ``package_dir`` in the build configuration and ``root_dir``
     """
     parent_path = root_dir
-    module_parts = module_name.split('.')
     if package_dir:
+        module_parts = module_name.split('.')
         if module_parts[0] in package_dir:
             # A custom path was specified for the module we want to import
             custom_path = package_dir[module_parts[0]]
@@ -311,9 +311,9 @@ def find_packages(
     root_dir = root_dir or os.curdir
     where = kwargs.pop('where', ['.'])
     packages: List[str] = []
-    fill_package_dir = {} if fill_package_dir is None else fill_package_dir
     search = list(unique_everseen(always_iterable(where)))
 
+    fill_package_dir = {} if fill_package_dir is None else fill_package_dir
     if len(search) == 1 and all(not _same_path(search[0], x) for x in (".", root_dir)):
         fill_package_dir.setdefault("", search[0])
 
@@ -321,9 +321,10 @@ def find_packages(
         package_path = _nest_path(root_dir, path)
         pkgs = PackageFinder.find(package_path, **kwargs)
         packages.extend(pkgs)
-        if pkgs and not (
-            fill_package_dir.get("") == path
-            or os.path.samefile(package_path, root_dir)
+        if (
+            pkgs
+            and fill_package_dir.get("") != path
+            and not os.path.samefile(package_path, root_dir)
         ):
             fill_package_dir.update(construct_package_dir(pkgs, path))
 
@@ -345,11 +346,7 @@ def version(value: Union[Callable, Iterable[Union[str, int]], str]) -> str:
     value = cast(Iterable[Union[str, int]], value)
 
     if not isinstance(value, str):
-        if hasattr(value, '__iter__'):
-            value = '.'.join(map(str, value))
-        else:
-            value = '%s' % value
-
+        value = '.'.join(map(str, value)) if hasattr(value, '__iter__') else f'{value}'
     return value
 
 

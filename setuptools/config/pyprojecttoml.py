@@ -358,7 +358,7 @@ class _ConfigExpander:
         self, dist: "Distribution", package_dir: Mapping[str, str]
     ) -> Optional[Dict[str, dict]]:
         fields = ("entry-points", "scripts", "gui-scripts")
-        if not any(field in self.dynamic for field in fields):
+        if all(field not in self.dynamic for field in fields):
             return None
 
         text = self._obtain(dist, "entry-points", package_dir)
@@ -384,15 +384,13 @@ class _ConfigExpander:
 
     def _obtain_classifiers(self, dist: "Distribution"):
         if "classifiers" in self.dynamic:
-            value = self._obtain(dist, "classifiers", {})
-            if value:
+            if value := self._obtain(dist, "classifiers", {}):
                 return value.splitlines()
         return None
 
     def _obtain_dependencies(self, dist: "Distribution"):
         if "dependencies" in self.dynamic:
-            value = self._obtain(dist, "dependencies", {})
-            if value:
+            if value := self._obtain(dist, "dependencies", {}):
                 return _parse_requirements_list(value)
         return None
 
@@ -448,7 +446,7 @@ class _EnsurePackagesDiscovered(_expand.EnsurePackagesDiscovered):
         """
         dist, cfg = self._dist, self._setuptools_cfg
         package_dir: Dict[str, str] = cfg.setdefault("package-dir", {})
-        package_dir.update(dist.package_dir or {})
+        package_dir |= (dist.package_dir or {})
         dist.package_dir = package_dir  # needs to be the same object
 
         dist.set_defaults._ignore_ext_modules()  # pyproject.toml-specific behaviour

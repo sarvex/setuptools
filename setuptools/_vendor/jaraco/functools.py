@@ -203,7 +203,7 @@ def _special_method_cache(method, cache_wrapper):
     if name not in special_names:
         return
 
-    wrapper_name = '__cached' + name
+    wrapper_name = f'__cached{name}'
 
     def proxy(self, *args, **kwargs):
         if wrapper_name not in vars(self):
@@ -338,7 +338,7 @@ def retry_call(func, cleanup=lambda: None, retries=0, trap=()):
     to propagate.
     """
     attempts = itertools.count() if retries == float('inf') else range(retries)
-    for attempt in attempts:
+    for _ in attempts:
         try:
             return func()
         except trap:
@@ -477,7 +477,7 @@ def save_method_args(method):
 
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
-        attr_name = '_saved_' + method.__name__
+        attr_name = f'_saved_{method.__name__}'
         attr = args_and_kwargs(args, kwargs)
         setattr(self, attr_name, attr)
         return method(self, *args, **kwargs)

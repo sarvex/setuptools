@@ -67,7 +67,6 @@ class install_scripts(orig.install_scripts):
         mask = current_umask()
         if not self.dry_run:
             ensure_directory(target)
-            f = open(target, "w" + mode)
-            f.write(contents)
-            f.close()
+            with open(target, f"w{mode}") as f:
+                f.write(contents)
             chmod(target, 0o777 - mask)

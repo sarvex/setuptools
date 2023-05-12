@@ -271,7 +271,7 @@ class ConfigHandler(Generic[Target]):
     def parsers(self):
         """Metadata item name to parser function mapping."""
         raise NotImplementedError(
-            '%s must provide .parsers property' % self.__class__.__name__
+            f'{self.__class__.__name__} must provide .parsers property'
         )
 
     def __setitem__(self, option_name, value):
@@ -295,7 +295,7 @@ class ConfigHandler(Generic[Target]):
             return
 
         simple_setter = functools.partial(target_obj.__setattr__, option_name)
-        setter = getattr(target_obj, 'set_%s' % option_name, simple_setter)
+        setter = getattr(target_obj, f'set_{option_name}', simple_setter)
         setter(parsed)
 
         self.set_options.append(option_name)
@@ -313,11 +313,7 @@ class ConfigHandler(Generic[Target]):
         if isinstance(value, list):  # _get_parser_compound case
             return value
 
-        if '\n' in value:
-            value = value.splitlines()
-        else:
-            value = value.split(separator)
-
+        value = value.splitlines() if '\n' in value else value.split(separator)
         return [chunk.strip() for chunk in value if chunk.strip()]
 
     @classmethod
@@ -446,10 +442,10 @@ class ConfigHandler(Generic[Target]):
         :param callable values_parser: function with 2 args corresponding to key, value
         :rtype: dict
         """
-        value = {}
-        for key, (_, val) in section_options.items():
-            value[key] = values_parser(key, val)
-        return value
+        return {
+            key: values_parser(key, val)
+            for key, (_, val) in section_options.items()
+        }
 
     @classmethod
     def _parse_section_to_dict(cls, section_options, values_parser=None):
@@ -482,13 +478,10 @@ class ConfigHandler(Generic[Target]):
         for section_name, section_options in self.sections.items():
             method_postfix = ''
             if section_name:  # [section.option] variant
-                method_postfix = '_%s' % section_name
+                method_postfix = f'_{section_name}'
 
             section_parser_method: Optional[Callable] = getattr(
-                self,
-                # Dots in section names are translated into dunderscores.
-                ('parse_section%s' % method_postfix).replace('.', '__'),
-                None,
+                self, f'parse_section{method_postfix}'.replace('.', '__'), None
             )
 
             if section_parser_method is None:

@@ -256,7 +256,7 @@ class editable_wheel(Command):
             if hasattr(cmd, "get_outputs"):
                 files.extend(cmd.get_outputs() or [])
             if hasattr(cmd, "get_output_mapping"):
-                mapping.update(cmd.get_output_mapping() or {})
+                mapping |= (cmd.get_output_mapping() or {})
 
         return files, mapping
 
@@ -599,7 +599,7 @@ def _parent_path(pkg, pkg_path):
     'src/c'
     """
     parent = pkg_path[:-len(pkg)] if pkg_path.endswith(pkg) else pkg_path
-    return parent.rstrip("/" + os.sep)
+    return parent.rstrip(f"/{os.sep}")
 
 
 def _find_packages(dist: Distribution) -> Iterator[str]:

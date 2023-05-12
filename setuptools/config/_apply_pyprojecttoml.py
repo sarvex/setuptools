@@ -97,9 +97,8 @@ def _handle_missing_dynamic(dist: "Distribution", project_table: dict):
     # TODO: Set fields back to `None` once the feature stabilizes
     dynamic = set(project_table.get("dynamic", []))
     for field, getter in _PREVIOUSLY_DEFINED.items():
-        if not (field in project_table or field in dynamic):
-            value = getter(dist)
-            if value:
+        if field not in project_table and field not in dynamic:
+            if value := getter(dist):
                 _WouldIgnoreField.emit(field=field, value=value)
 
 
@@ -109,8 +108,7 @@ def json_compatible_key(key: str) -> str:
 
 
 def _set_config(dist: "Distribution", field: str, value: Any):
-    setter = getattr(dist.metadata, f"set_{field}", None)
-    if setter:
+    if setter := getattr(dist.metadata, f"set_{field}", None):
         setter(value)
     elif hasattr(dist.metadata, field) or field in SETUPTOOLS_PATCHES:
         setattr(dist.metadata, field, value)
@@ -206,7 +204,7 @@ def _dependencies(dist: "Distribution", val: list, _root_dir):
 
 def _optional_dependencies(dist: "Distribution", val: dict, _root_dir):
     existing = getattr(dist, "extras_require", {})
-    _set_config(dist, "extras_require", {**existing, **val})
+    _set_config(dist, "extras_require", existing | val)
 
 
 def _unify_entry_points(project_table: dict):

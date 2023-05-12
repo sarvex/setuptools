@@ -42,7 +42,7 @@ def validate_https___packaging_python_org_en_latest_specifications_declaring_bui
             data__buildsystem_is_dict = isinstance(data__buildsystem, dict)
             if data__buildsystem_is_dict:
                 data__buildsystem_len = len(data__buildsystem)
-                if not all(prop in data__buildsystem for prop in ['requires']):
+                if any(prop not in data__buildsystem for prop in ['requires']):
                     raise JsonSchemaValueException("" + (name_prefix or "data") + ".build-system must contain ['requires'] properties", value=data__buildsystem, name="" + (name_prefix or "data") + ".build-system", definition={'type': 'object', 'description': 'Table used to store build-related data', 'additionalProperties': False, 'properties': {'requires': {'type': 'array', '$$description': ['List of dependencies in the :pep:`508` format required to execute the build', 'system. Please notice that the resulting dependency graph', '**MUST NOT contain cycles**'], 'items': {'type': 'string'}}, 'build-backend': {'type': 'string', 'description': 'Python object that will be used to perform the build according to :pep:`517`', 'format': 'pep517-backend-reference'}, 'backend-path': {'type': 'array', '$$description': ['List of directories to be prepended to ``sys.path`` when loading the', 'back-end, and running its hooks'], 'items': {'type': 'string', '$comment': 'Should be a path (TODO: enforce it with format?)'}}}, 'required': ['requires']}, rule='required')
                 data__buildsystem_keys = set(data__buildsystem.keys())
                 if "requires" in data__buildsystem_keys:
@@ -53,7 +53,7 @@ def validate_https___packaging_python_org_en_latest_specifications_declaring_bui
                     data__buildsystem__requires_is_list = isinstance(data__buildsystem__requires, (list, tuple))
                     if data__buildsystem__requires_is_list:
                         data__buildsystem__requires_len = len(data__buildsystem__requires)
-                        for data__buildsystem__requires_x, data__buildsystem__requires_item in enumerate(data__buildsystem__requires):
+                        for data__buildsystem__requires_item in data__buildsystem__requires:
                             if not isinstance(data__buildsystem__requires_item, (str)):
                                 raise JsonSchemaValueException("" + (name_prefix or "data") + ".build-system.requires[{data__buildsystem__requires_x}]".format(**locals()) + " must be string", value=data__buildsystem__requires_item, name="" + (name_prefix or "data") + ".build-system.requires[{data__buildsystem__requires_x}]".format(**locals()) + "", definition={'type': 'string'}, rule='type')
                 if "build-backend" in data__buildsystem_keys:
@@ -61,9 +61,8 @@ def validate_https___packaging_python_org_en_latest_specifications_declaring_bui
                     data__buildsystem__buildbackend = data__buildsystem["build-backend"]
                     if not isinstance(data__buildsystem__buildbackend, (str)):
                         raise JsonSchemaValueException("" + (name_prefix or "data") + ".build-system.build-backend must be string", value=data__buildsystem__buildbackend, name="" + (name_prefix or "data") + ".build-system.build-backend", definition={'type': 'string', 'description': 'Python object that will be used to perform the build according to :pep:`517`', 'format': 'pep517-backend-reference'}, rule='type')
-                    if isinstance(data__buildsystem__buildbackend, str):
-                        if not custom_formats["pep517-backend-reference"](data__buildsystem__buildbackend):
-                            raise JsonSchemaValueException("" + (name_prefix or "data") + ".build-system.build-backend must be pep517-backend-reference", value=data__buildsystem__buildbackend, name="" + (name_prefix or "data") + ".build-system.build-backend", definition={'type': 'string', 'description': 'Python object that will be used to perform the build according to :pep:`517`', 'format': 'pep517-backend-reference'}, rule='format')
+                    if not custom_formats["pep517-backend-reference"](data__buildsystem__buildbackend):
+                        raise JsonSchemaValueException("" + (name_prefix or "data") + ".build-system.build-backend must be pep517-backend-reference", value=data__buildsystem__buildbackend, name="" + (name_prefix or "data") + ".build-system.build-backend", definition={'type': 'string', 'description': 'Python object that will be used to perform the build according to :pep:`517`', 'format': 'pep517-backend-reference'}, rule='format')
                 if "backend-path" in data__buildsystem_keys:
                     data__buildsystem_keys.remove("backend-path")
                     data__buildsystem__backendpath = data__buildsystem["backend-path"]
@@ -72,7 +71,7 @@ def validate_https___packaging_python_org_en_latest_specifications_declaring_bui
                     data__buildsystem__backendpath_is_list = isinstance(data__buildsystem__backendpath, (list, tuple))
                     if data__buildsystem__backendpath_is_list:
                         data__buildsystem__backendpath_len = len(data__buildsystem__backendpath)
-                        for data__buildsystem__backendpath_x, data__buildsystem__backendpath_item in enumerate(data__buildsystem__backendpath):
+                        for data__buildsystem__backendpath_item in data__buildsystem__backendpath:
                             if not isinstance(data__buildsystem__backendpath_item, (str)):
                                 raise JsonSchemaValueException("" + (name_prefix or "data") + ".build-system.backend-path[{data__buildsystem__backendpath_x}]".format(**locals()) + " must be string", value=data__buildsystem__backendpath_item, name="" + (name_prefix or "data") + ".build-system.backend-path[{data__buildsystem__backendpath_x}]".format(**locals()) + "", definition={'type': 'string', '$comment': 'Should be a path (TODO: enforce it with format?)'}, rule='type')
                 if data__buildsystem_keys:

@@ -17,8 +17,7 @@ _default_revctrl = list
 def walk_revctrl(dirname=''):
     """Find all files under revision control"""
     for ep in metadata.entry_points(group='setuptools.file_finders'):
-        for item in ep.load()(dirname):
-            yield item
+        yield from ep.load()(dirname)
 
 
 class sdist(sdist_add_defaults, orig.sdist):
@@ -92,10 +91,8 @@ class sdist(sdist_add_defaults, orig.sdist):
             pass
 
         orig_val = getattr(os, 'link', NoValue)
-        try:
+        with contextlib.suppress(Exception):
             del os.link
-        except Exception:
-            pass
         try:
             yield
         finally:
@@ -194,17 +191,16 @@ class sdist(sdist_add_defaults, orig.sdist):
         distribution.
         """
         log.info("reading manifest file '%s'", self.manifest)
-        manifest = open(self.manifest, 'rb')
-        for line in manifest:
-            # The manifest must contain UTF-8. See #303.
-            try:
-                line = line.decode('UTF-8')
-            except UnicodeDecodeError:
-                log.warn("%r not UTF-8 decodable -- skipping" % line)
-                continue
-            # ignore comments and blank lines
-            line = line.strip()
-            if line.startswith('#') or not line:
-                continue
-            self.filelist.append(line)
-        manifest.close()
+        with open(self.manifest, 'rb') as manifest:
+            for line in manifest:
+                # The manifest must contain UTF-8. See #303.
+                try:
+                    line = line.decode('UTF-8')
+                except UnicodeDecodeError:
+                    log.warn("%r not UTF-8 decodable -- skipping" % line)
+                    continue
+                # ignore comments and blank lines
+                line = line.strip()
+                if line.startswith('#') or not line:
+                    continue
+                self.filelist.append(line)

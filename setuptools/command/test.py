@@ -39,27 +39,21 @@ class ScanningLoader(TestLoader):
             return None
         self._visited.add(module)
 
-        tests = []
-        tests.append(TestLoader.loadTestsFromModule(self, module))
-
+        tests = [TestLoader.loadTestsFromModule(self, module)]
         if hasattr(module, "additional_tests"):
             tests.append(module.additional_tests())
 
         if hasattr(module, '__path__'):
             for file in resource_listdir(module.__name__, ''):
                 if file.endswith('.py') and file != '__init__.py':
-                    submodule = module.__name__ + '.' + file[:-3]
+                    submodule = f'{module.__name__}.{file[:-3]}'
+                elif resource_exists(module.__name__, f'{file}/__init__.py'):
+                    submodule = f'{module.__name__}.{file}'
                 else:
-                    if resource_exists(module.__name__, file + '/__init__.py'):
-                        submodule = module.__name__ + '.' + file
-                    else:
-                        continue
+                    continue
                 tests.append(self.loadTestsFromName(submodule))
 
-        if len(tests) != 1:
-            return self.suiteClass(tests)
-        else:
-            return tests[0]  # don't create a nested suite for only one return
+        return self.suiteClass(tests) if len(tests) != 1 else tests[0]
 
 
 # adapted from jaraco.classes.properties:NonDataProperty
@@ -68,9 +62,7 @@ class NonDataProperty:
         self.fget = fget
 
     def __get__(self, obj, objtype=None):
-        if obj is None:
-            return self
-        return self.fget(obj)
+        return self if obj is None else self.fget(obj)
 
 
 class test(Command):
@@ -104,7 +96,7 @@ class test(Command):
             if self.test_module is None:
                 self.test_suite = self.distribution.test_suite
             else:
-                self.test_suite = self.test_module + ".test_suite"
+                self.test_suite = f"{self.test_module}.test_suite"
 
         if self.test_loader is None:
             self.test_loader = getattr(self.distribution, 'test_loader', None)
@@ -150,7 +142,7 @@ class test(Command):
             sys.path.insert(0, project_path)
             working_set.__init__()
             add_activation_listener(lambda dist: dist.activate())
-            require('%s==%s' % (ei_cmd.egg_name, ei_cmd.egg_version))
+            require(f'{ei_cmd.egg_name}=={ei_cmd.egg_version}')
             with self.paths_on_pythonpath([project_path]):
                 yield
         finally:
@@ -175,8 +167,7 @@ class test(Command):
         try:
             prefix = os.pathsep.join(unique_everseen(paths))
             to_join = filter(None, [prefix, current_pythonpath])
-            new_path = os.pathsep.join(to_join)
-            if new_path:
+            if new_path := os.pathsep.join(to_join):
                 os.environ['PYTHONPATH'] = new_path
             yield
         finally:
@@ -213,10 +204,10 @@ class test(Command):
 
         cmd = ' '.join(self._argv)
         if self.dry_run:
-            self.announce('skipping "%s" (dry run)' % cmd)
+            self.announce(f'skipping "{cmd}" (dry run)')
             return
 
-        self.announce('running "%s"' % cmd)
+        self.announce(f'running "{cmd}"')
 
         paths = map(operator.attrgetter('location'), installed_dists)
         with self.paths_on_pythonpath(paths):
@@ -233,7 +224,7 @@ class test(Command):
             exit=False,
         )
         if not test.result.wasSuccessful():
-            msg = 'Test failed: %s' % test.result
+            msg = f'Test failed: {test.result}'
             self.announce(msg, log.ERROR)
             raise DistutilsError(msg)
 
